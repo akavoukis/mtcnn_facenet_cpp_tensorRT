@@ -9,6 +9,7 @@
 #include "videoStreamer.h"
 #include "network.h"
 #include "mtcnn.h"
+#include "mqtt.h"
 
 // Uncomment to print timings in milliseconds
 // #define LOG_TIMES
@@ -36,6 +37,11 @@ int main()
     int maxFacesPerScene = 5;
     float knownPersonThreshold = 1.;
     bool isCSICam = true;
+
+    // init mqtt
+    vector<string> detections;
+    mqtt_class mymqtt;
+    int ret = mymqtt.mqtt_init();
 
     // init facenet
     FaceNetClassifier faceNet = FaceNetClassifier(gLogger, dtype, uffFile, engineFile, batchSize, serializeEngine,
@@ -82,9 +88,12 @@ int main()
         faceNet.forward(frame, outputBbox);
         auto endForward = chrono::steady_clock::now();
         auto startFeatM = chrono::steady_clock::now();
-        faceNet.featureMatching(frame);
+        faceNet.featureMatching(frame, detections);
         auto endFeatM = chrono::steady_clock::now();
         faceNet.resetVariables();
+
+        mymqtt.mqtt_send_data(detections);
+        detections.clear();
         
         cv::imshow("VideoSource", frame);
         nbFrames++;

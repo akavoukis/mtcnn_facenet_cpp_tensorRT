@@ -58,6 +58,12 @@ if(NOT TENSORRT_FOUND)
     "Cannot find TensorRT library.")
 endif()
 
+# mqtt
+LIST(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/PahoMqttCpp")
+find_package (PahoMqttCpp REQUIRED)
+message("PAHO_CPP_LIB = ${PAHO_CPP_LIB}")
+
+
 # l2norm_helper plugin
 add_subdirectory(trt_l2norm_helper)
 include_directories(
@@ -77,3 +83,4 @@ target_link_libraries(${PROJECT_NAME}
   ${TENSORRT_LIBRARY}
 )
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} paho-mqttpp3 paho-mqtt3as)

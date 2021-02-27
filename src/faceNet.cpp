@@ -205,7 +205,7 @@ void FaceNetClassifier::forward(cv::Mat frame, std::vector<struct Bbox> outputBb
     }
 }
 
-void FaceNetClassifier::featureMatching(cv::Mat &image) {
+void FaceNetClassifier::featureMatching(cv::Mat &image, vector<string> &detections) {
 
     for(int i = 0; i < (m_embeddings.size()/128); i++) {
         double minDistance = 10.* m_knownPersonThresh;
@@ -229,6 +229,7 @@ void FaceNetClassifier::featureMatching(cv::Mat &image) {
         if (minDistance <= m_knownPersonThresh) {
             cv::putText(image, m_knownFaces[winner].className, cv::Point(m_croppedFaces[i].y1+2, m_croppedFaces[i].x2-3),
                     cv::FONT_HERSHEY_DUPLEX, 0.1 + 2*fontScaler,  cv::Scalar(0,0,255,255), 1);
+            detections.push_back(m_knownFaces[winner].className); 
         }
         else if (minDistance > m_knownPersonThresh || winner == -1){
             cv::putText(image, "New Person", cv::Point(m_croppedFaces[i].y1+2, m_croppedFaces[i].x2-3),

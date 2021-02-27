@@ -23,7 +23,7 @@ public:
     void setResoltionFile(int width, int height);
     void assertResolution();
     void getFrame(cv::Mat &frame);
-	std::string gstreamer_pipeline (int capture_width, int capture_height, int display_width, int 	display_height, int frameRate, int flip_method=0);
+	std::string gstreamer_pipeline (int capture_width, int capture_height, int display_width, int 	display_height, int frameRate, int flip_method=2);
     void release();
 };
 
