@@ -12,51 +12,25 @@
 
 using namespace std;
 
-
-/**
- * A callback class for use with the main MQTT client.
- */
-class callback : public virtual mqtt::callback
+class callback  : public virtual mqtt::callback
 {
-    public:
-        void connection_lost(const string& cause) ;
-        void delivery_complete(mqtt::delivery_token_ptr tok);
+	void connection_lost(const string& cause) override;
+	void delivery_complete(mqtt::delivery_token_ptr tok) override;
 };
-
-/**
- * A base action listener.
- */
-class action_listener : public virtual mqtt::iaction_listener
-{
-protected:
-	void on_failure(const mqtt::token& tok);
-	void on_success(const mqtt::token& tok);
-};
-
-/**
- * A derived action listener for publish events.
- */
-class delivery_action_listener : public action_listener
-{
-	atomic<bool> done_;
-	void on_failure(const mqtt::token& tok);
-	void on_success(const mqtt::token& tok);
-public:
-	delivery_action_listener() : done_(false) {}
-	bool is_done() const { return done_; }
-};
-
-
 
 class mqtt_class {
     public:
-        mqtt_class();
+        mqtt_class(const string address, const string clientID);
         int mqtt_init();
         int mqtt_send_data(vector<string> detections);
     private:
         const int QOS = 1;
+        string connection_address;
+        string mqtt_client_id;
+        const string persist_dir {"./persist"};
         const std::chrono::duration<unsigned int> TIMEOUT = std::chrono::seconds(10);
-        //mqtt::async_client client;
+        mqtt::async_client *mqtt_client;
+        callback cb;
 };
 
 

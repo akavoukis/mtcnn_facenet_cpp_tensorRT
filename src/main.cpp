@@ -10,6 +10,8 @@
 #include "network.h"
 #include "mtcnn.h"
 #include "mqtt.h"
+#include "emotion.h"
+
 
 // Uncomment to print timings in milliseconds
 // #define LOG_TIMES
@@ -20,6 +22,7 @@ using namespace nvuffparser;
 
 int main()
 {
+
     Logger gLogger = Logger();
     // Register default TRT plugins (e.g. LRelu_TRT)
     if (!initLibNvInferPlugins(&gLogger, "")) { return 1; }
@@ -27,6 +30,8 @@ int main()
     // USER DEFINED VALUES
     const string uffFile="../facenetModels/facenet.uff";
     const string engineFile="../facenetModels/facenet.engine";
+    const string emotion_uffFile="../emotionModels/emotion_model.uff";
+    const string emotion_engineFile="../emotionModels/emotion_model.engine";
     DataType dtype = DataType::kHALF;
     //DataType dtype = DataType::kFLOAT;
     bool serializeEngine = true;
@@ -40,12 +45,20 @@ int main()
 
     // init mqtt
     vector<string> detections;
-    mqtt_class mymqtt;
-    int ret = mymqtt.mqtt_init();
 
+    // mqtt_class mymqtt("tcp://localhost:1883", "nano");
+    mqtt_class mymqtt("tcp://rpi-bridge:1884", "nano");
+    int ret = mymqtt.mqtt_init();
+    
+    
     // init facenet
     FaceNetClassifier faceNet = FaceNetClassifier(gLogger, dtype, uffFile, engineFile, batchSize, serializeEngine,
             knownPersonThreshold, maxFacesPerScene, videoFrameWidth, videoFrameHeight);
+
+    // init Emotion
+    EmotionClassifier emotion = EmotionClassifier(gLogger, dtype, emotion_uffFile, emotion_engineFile, batchSize, serializeEngine,
+            knownPersonThreshold, maxFacesPerScene, videoFrameWidth, videoFrameHeight);
+
 
     // init opencv stuff
     VideoStreamer videoStreamer = VideoStreamer(0, videoFrameWidth, videoFrameHeight, 60, isCSICam);
@@ -92,8 +105,11 @@ int main()
         auto endFeatM = chrono::steady_clock::now();
         faceNet.resetVariables();
 
-        mymqtt.mqtt_send_data(detections);
-        detections.clear();
+        if (detections.size() > 0) {
+           mymqtt.mqtt_send_data(detections);
+           detections.clear();
+        }
+        
         
         cv::imshow("VideoSource", frame);
         nbFrames++;
@@ -118,6 +134,7 @@ int main()
         std::cout << "Forward took " << std::chrono::duration_cast<chrono::milliseconds>(endForward - startForward).count() << "ms\n";
         std::cout << "Feature matching took " << std::chrono::duration_cast<chrono::milliseconds>(endFeatM - startFeatM).count() << "ms\n\n";
         #endif  // LOG_TIMES
+        
     }
     auto globalTimeEnd = chrono::steady_clock::now();
     cv::destroyAllWindows();
@@ -128,7 +145,8 @@ int main()
 
     std::cout << "Counted " << nbFrames << " frames in " << double(milliseconds)/1000. << " seconds!" <<
               " This equals " << fps << "fps.\n";
-
+    
     return 0;
+    
 }
 
