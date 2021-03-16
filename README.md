@@ -159,3 +159,17 @@ sudo systemctl restart nvargus-daemon
 ## Info
 Niclas Wesemann <br>
 [niclaswesemann@gmail.com](mailto:niclas.wesemann@gmail.com) <br>
+
+
+## Extra documentation for mqtt + emotion
+
+Download the emotion model from https://github.com/petercunha/Emotion/blob/master/models/emotion_model.hdf5?raw=true
+And copy it in emotionModels directory
+
+The model is on keras format and needs to be converted to tensorrt, To convert it run `keras_to_frozen_pb.py`
+Running the script above should generate emotion_model.pb 
+
+Convert frozen protobuf (.pb) model to UFF
+Use the emotion_step01_pb_to_uff.py tool which is installed with tensorflow
+installation to convert the *.pb model to *.uff. The script will replace
+
